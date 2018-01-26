@@ -1,7 +1,7 @@
-function global:Update-RDSH {
-      Begin{}
+function global:Update-RDMS {
+    Begin{}
     Process{
-        Write-Debug "Starting Update-RDSH"
+        Write-Debug "Starting Update-RDMS"
         Write-Debug "Import RDS cmdlets"
         Import-Module RemoteDesktop
         $ConnectionBrokers = Get-RDServer | Where-Object {$_.Roles -contains "RDS-CONNECTION-BROKER"}
@@ -9,7 +9,7 @@ function global:Update-RDSH {
                 Write-Debug "Find active Connection Broker"
         $ActiveManagementServer = $null
         foreach($Broker in $ConnectionBrokers.Server){
-            $ActiveManagementServer = (Get-ConnectionBrokerHighAvailability -ConnectionBroker $Broker).ActiveManagementServer
+            $ActiveManagementServer = (Test-NetConnection -ComputerName $Broker | Where-Object {$_.PingSucceeded -eq 'True'})
             if($ActiveManagementServer -eq $null){
                 Write-Host "Unable to contact $Broker" -ForegroundColor Yellow
             } else {
@@ -25,7 +25,7 @@ function global:Update-RDSH {
                 Start-Process -FilePath "$env:systemroot\System32\tskill.exe" -ArgumentList "ServerManager"
             }
             Write-Debug "Get RD servers"
-            $RDServers = Get-RDServer -ConnectionBroker $ActiveManagementServer
+            $RDServers = Get-RDServer -ConnectionBroker $ActiveManagementServer.ComputerName
             Write-Debug "Get Server Manager XML"
             [XML]$SMXML = Get-Content -Path $ServerManagerXML
             foreach($RDServer in $RDServers){
