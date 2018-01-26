@@ -1,33 +1,14 @@
-function global:Update-RDMS {
-    <#
-        .Synopsis
-        Ensure all RDS deployment servers are added to the Remote Desktop Management Server (Server Manager)
-
-        .Description
-        This cmdlet queries the Connection Broker and updates Server Manager to ensure all the RDS servers are added.
-        Server Manager is killed if running, updated and restarted.
-
-        .Example
-        Update-RDMS
-        Updates the RDMS
-
-        .Notes
-        RCM August 2015
-
-        .Link
-        http://www.rcmtech.co.uk/
-    #>
-    Begin{}
+function global:Update-RDSH {
+      Begin{}
     Process{
-        Write-Debug "Starting Update-RDMS"
-
-        $ConnectionBrokers = "CBR01.rcmtech.co.uk","CBR02.rcmtech.co.uk"
-        $ServerManagerXML = "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\ServerManager\Serverlist.xml"
+        Write-Debug "Starting Update-RDSH"
         Write-Debug "Import RDS cmdlets"
         Import-Module RemoteDesktop
-        Write-Debug "Find active Connection Broker"
+        $ConnectionBrokers = Get-RDServer | Where-Object {$_.Roles -contains "RDS-CONNECTION-BROKER"}
+        $ServerManagerXML = "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\ServerManager\Serverlist.xml"
+                Write-Debug "Find active Connection Broker"
         $ActiveManagementServer = $null
-        foreach($Broker in $ConnectionBrokers){
+        foreach($Broker in $ConnectionBrokers.Server){
             $ActiveManagementServer = (Get-ConnectionBrokerHighAvailability -ConnectionBroker $Broker).ActiveManagementServer
             if($ActiveManagementServer -eq $null){
                 Write-Host "Unable to contact $Broker" -ForegroundColor Yellow
